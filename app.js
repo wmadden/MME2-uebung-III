@@ -68,8 +68,9 @@ function JSONrepSingleElem(type, id){
     var element = store.select(type, id);
     var newElement = Object.assign({}, element);
     if (type == 'accounts') {
+        newElement.tweetshref = "http://localhost:3000/accounts/" + newElement.id + "/tweets";
         newElement.tweets = [];
-        newElement.href = "http://localhost:3000/accounts/" + newElement.id
+        newElement.href = "http://localhost:3000/accounts/" + newElement.id;
         for (var i = 0; i < element.tweets.length; i++){
             newElement.tweets.push(
                 JSONrepSingleElem('tweets', element.tweets[i].id)
@@ -77,8 +78,9 @@ function JSONrepSingleElem(type, id){
         }
     }
     if (type == 'tweets') {
-        newElement.href = "http://localhost:3000/tweets/" + newElement.id
+        newElement.href = "http://localhost:3000/tweets/" + newElement.id;
         newElement.account = element.account.id;
+        newElement.accounthref = "http://localhost:3000/accounts/" + newElement.account;
     }
     return newElement;
 }
@@ -91,6 +93,20 @@ function JSONrepCollection(type){
 
     }
     return newElem;
+}
+
+function JSONrepTweetsInAccount(id){
+    var tweets = [];
+    for(var i = 0; i < store.select('accounts').length; i++) {
+        tweets = store.select('tweets').filter(function (tweet) {
+            return tweet.account.id == id;
+        });
+    }
+    var newTweets = [];
+    for (var j = 0; j < tweets.length; j++){
+        newTweets.push(JSONrepSingleElem('tweets', tweets[j].id));
+    }
+    return newTweets;
 }
 
 
@@ -141,6 +157,9 @@ app.delete('/accounts/:id', function(req,res,next) {
     res.status(200).end();
 });
 
+app.get('/accounts/:id/tweets', function(req,res,next) {
+    res.json(JSONrepTweetsInAccount(req.params.id));
+});
 
 // TODOs
 // TODO: some HTTP  error responses in case not found
