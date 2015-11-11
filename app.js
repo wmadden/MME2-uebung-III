@@ -64,19 +64,41 @@ app.use(function(req, res, next) {
 
 // Routes ***************************************
 
+function JSONrepTweet(id){
+    var tweet = store.select('tweets', id);
+    var newTweet = Object.assign({}, tweet);
+    //if (tweet.account.id) {
+    newTweet.account = tweet.account.id;
+    //};
+    return newTweet;
+}
+
+function JSONrepTweets(){
+    var newTweets = [];
+    var tweets = store.select('tweets');
+    for(var i = 0; i < tweets.length; i++){
+        newTweets.push(JSONrepTweet(tweets[i].id));
+
+    }
+    return newTweets;
+}
+
+
 app.get('/tweets', function(req,res,next) {
-    res.json(store.select('tweets'));
+    res.json(JSONrepTweets());
 });
 
 app.post('/tweets', function(req,res,next) {
-    var id = store.insert('tweets', req.body); // TODO check that the element is really a tweet!
+    var tweet = req.body;
+    tweet.account = store.select('accounts', tweet.account);
+    var id = store.insert('tweets', tweet); // TODO check that the element is really a tweet!
     // set code 201 "created" and send the item back
-    res.status(201).json(store.select('tweets', id));
+    res.status(201).json(JSONrepTweet(id));
 });
 
 
 app.get('/tweets/:id', function(req,res,next) {
-    res.json(store.select('tweets', req.params.id));
+    res.json(JSONrepTweet(req.params.id));
 });
 
 app.delete('/tweets/:id', function(req,res,next) {
@@ -86,6 +108,26 @@ app.delete('/tweets/:id', function(req,res,next) {
 
 app.put('/tweets/:id', function(req,res,next) {
     store.replace('tweets', req.params.id, req.body);
+    res.status(200).end();
+});
+
+app.get('/accounts', function(req,res,next) {
+    res.json(store.select('accounts'));
+});
+
+app.post('/accounts', function(req,res,next) {
+    var id = store.insert('accounts', req.body); // TODO check that the element is really a tweet!
+    // set code 201 "created" and send the item back
+    res.status(201).json(store.select('accounts', id));
+});
+
+
+app.get('/accounts/:id', function(req,res,next) {
+    res.json(store.select('accounts', req.params.id));
+});
+
+app.delete('/accounts/:id', function(req,res,next) {
+    store.remove('tweets', req.params.id);
     res.status(200).end();
 });
 
