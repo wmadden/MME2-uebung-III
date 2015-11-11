@@ -25,41 +25,41 @@ var globalCounter = (function() {
 
 // some default store content
 var accounts = [
-    {   id: 105,
-        age: "Hello world tweet",
+    {   id: globalCounter(),
+        age: "12.12.2012",
         tweets: null
     },
-    {   id: 106,
-        age: "Another nice tweet",
+    {   id: globalCounter(),
+        age: "15.4.2015",
         tweets: null
     }
 ];
 var tweets = [
     {   id: globalCounter(),
         account: accounts.find(function(account){
-            return account.id == 105;
+            return account.id == 101;
         }),
         message: "Hello world tweet",
         creator: {
-            href: "http://localhost:3000/users/103"
+            href: "http://localhost:3000/users/106"
         }
     },
     {   id: globalCounter(),
         account: accounts.find(function(account){
-            return account.id == 105;
+            return account.id == 101;
         }),
         message: "NOODLES",
         creator: {
-            href: "http://localhost:3000/users/103"
+            href: "http://localhost:3000/users/106"
         }
     },
     {   id: globalCounter(),
         account: accounts.find(function(account){
-            return account.id == 106;
+            return account.id == 102;
         }),
         message: "Another nice tweet",
         creator: {
-            href: "http://localhost:3000/users/104"
+            href: "http://localhost:3000/users/107"
         }
     }
 ];
@@ -179,7 +179,8 @@ var store = {
                 index = i;
             }
         });
-        delete memory[type][index];
+        memory[type].splice(index, 1);
+        //delete memory[type][index];
         return this;
     }
 };

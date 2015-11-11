@@ -64,28 +64,35 @@ app.use(function(req, res, next) {
 
 // Routes ***************************************
 
-function JSONrepTweet(id){
-    var tweet = store.select('tweets', id);
-    var newTweet = Object.assign({}, tweet);
-    //if (tweet.account.id) {
-    newTweet.account = tweet.account.id;
-    //};
-    return newTweet;
+function JSONrepSingleElem(type, id){
+    var element = store.select(type, id);
+    var newElement = Object.assign({}, element);
+    if (type == 'accounts') {
+        newElement.tweets = [];
+        for (var i = 0; i < element.tweets.length; i++)
+        newElement.tweets.push(
+            JSONrepSingleElem('tweets', element.tweets[i].id)
+        );
+    }
+    if (type == 'tweets') {
+        newElement.account = element.account.id;
+    }
+    return newElement;
 }
 
-function JSONrepTweets(){
-    var newTweets = [];
-    var tweets = store.select('tweets');
-    for(var i = 0; i < tweets.length; i++){
-        newTweets.push(JSONrepTweet(tweets[i].id));
+function JSONrepCollection(type){
+    var newElem = [];
+    var elements = store.select(type);
+    for(var i = 0; i < elements.length; i++){
+        newElem.push(JSONrepSingleElem(type, elements[i].id));
 
     }
-    return newTweets;
+    return newElem;
 }
 
 
 app.get('/tweets', function(req,res,next) {
-    res.json(JSONrepTweets());
+    res.json(JSONrepCollection('tweets'));
 });
 
 app.post('/tweets', function(req,res,next) {
@@ -93,16 +100,16 @@ app.post('/tweets', function(req,res,next) {
     tweet.account = store.select('accounts', tweet.account);
     var id = store.insert('tweets', tweet); // TODO check that the element is really a tweet!
     // set code 201 "created" and send the item back
-    res.status(201).json(JSONrepTweet(id));
+    res.status(201).json(JSONrepSingleElem('tweets', id));
 });
 
 
 app.get('/tweets/:id', function(req,res,next) {
-    res.json(JSONrepTweet(req.params.id));
+    res.json(JSONrepSingleElem('tweets', req.params.id));
 });
 
 app.delete('/tweets/:id', function(req,res,next) {
-    store.remove('tweets', req.params.id);
+    store.remove(req.params.id);
     res.status(200).end();
 });
 
@@ -112,22 +119,22 @@ app.put('/tweets/:id', function(req,res,next) {
 });
 
 app.get('/accounts', function(req,res,next) {
-    res.json(store.select('accounts'));
+    res.json(JSONrepCollection('accounts'));
 });
 
 app.post('/accounts', function(req,res,next) {
     var id = store.insert('accounts', req.body); // TODO check that the element is really a tweet!
     // set code 201 "created" and send the item back
-    res.status(201).json(store.select('accounts', id));
+    res.status(201).json(JSONrepSingleElem('accounts', id));
 });
 
 
 app.get('/accounts/:id', function(req,res,next) {
-    res.json(store.select('accounts', req.params.id));
+    res.json(JSONrepSingleElem('accounts', req.params.id));
 });
 
 app.delete('/accounts/:id', function(req,res,next) {
-    store.remove('tweets', req.params.id);
+    store.remove('accounts', req.params.id);
     res.status(200).end();
 });
 
