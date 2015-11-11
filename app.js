@@ -69,12 +69,15 @@ function JSONrepSingleElem(type, id){
     var newElement = Object.assign({}, element);
     if (type == 'accounts') {
         newElement.tweets = [];
-        for (var i = 0; i < element.tweets.length; i++)
-        newElement.tweets.push(
-            JSONrepSingleElem('tweets', element.tweets[i].id)
-        );
+        newElement.href = "http://localhost:3000/accounts/" + newElement.id
+        for (var i = 0; i < element.tweets.length; i++){
+            newElement.tweets.push(
+                JSONrepSingleElem('tweets', element.tweets[i].id)
+            );
+        }
     }
     if (type == 'tweets') {
+        newElement.href = "http://localhost:3000/tweets/" + newElement.id
         newElement.account = element.account.id;
     }
     return newElement;
