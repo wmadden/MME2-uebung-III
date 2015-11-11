@@ -24,14 +24,39 @@ var globalCounter = (function() {
 })();
 
 // some default store content
+var accounts = [
+    {   id: 105,
+        age: "Hello world tweet",
+        tweets: null
+    },
+    {   id: 106,
+        age: "Another nice tweet",
+        tweets: null
+    }
+];
 var tweets = [
     {   id: globalCounter(),
+        account: accounts.find(function(account){
+            return account.id == 105;
+        }),
         message: "Hello world tweet",
         creator: {
             href: "http://localhost:3000/users/103"
         }
     },
     {   id: globalCounter(),
+        account: accounts.find(function(account){
+            return account.id == 105;
+        }),
+        message: "NOODLES",
+        creator: {
+            href: "http://localhost:3000/users/103"
+        }
+    },
+    {   id: globalCounter(),
+        account: accounts.find(function(account){
+            return account.id == 106;
+        }),
         message: "Another nice tweet",
         creator: {
             href: "http://localhost:3000/users/104"
@@ -48,11 +73,16 @@ var users = [
         lastname: "Doe"
     }
 ];
-
+for(var i = 0; i < accounts.length; i++) {
+    accounts[i].tweets = tweets.filter(function (tweet) {
+        return tweet.account.id == accounts[i].id;
+    });
+}
 // our "in memory database" is a simple object!
 var memory = {};
 memory.tweets = tweets;
 memory.users = users;
+memory.accounts = accounts;
 
 // private helper functions
 var checkElement = function(element) {
