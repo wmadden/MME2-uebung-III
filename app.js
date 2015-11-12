@@ -64,71 +64,52 @@ app.use(function(req, res, next) {
 
 // Routes ***************************************
 
-function JSONrepSingleElem(type, id){
-    var element = store.select(type, id);
-    var newElement = Object.assign({}, element);
-    if (type == 'accounts') {
-        newElement.tweetshref = "http://localhost:3000/accounts/" + newElement.id + "/tweets";
-        newElement.tweets = [];
-        newElement.href = "http://localhost:3000/accounts/" + newElement.id;
-        for (var i = 0; i < element.tweets.length; i++){
-            newElement.tweets.push(
-                JSONrepSingleElem('tweets', element.tweets[i].id)
-            );
-        }
-    }
-    if (type == 'tweets') {
-        newElement.href = "http://localhost:3000/tweets/" + newElement.id;
-        newElement.account = element.account.id;
-        newElement.accounthref = "http://localhost:3000/accounts/" + newElement.account;
-    }
-    return newElement;
+function tweetJSON(tweet) {
+    return Object.assign({}, tweet, {
+        href: "http://localhost:3000/tweets/" + tweet.id,
+        account: tweet.account.id,
+        accounthref: "http://localhost:3000/accounts/" + tweet.account.id
+    });
 }
 
-function JSONrepCollection(type){
-    var newElem = [];
-    var elements = store.select(type);
-    for(var i = 0; i < elements.length; i++){
-        newElem.push(JSONrepSingleElem(type, elements[i].id));
-
-    }
-    return newElem;
+function accountJSON(account) {
+    return Object.assign({}, account, {
+        tweetshref: "http://localhost:3000/accounts/" + account.id + "/tweets",
+        tweets: tweetCollectionJSON(account.tweets),
+        href: "http://localhost:3000/accounts/" + account.id
+    });
 }
 
-function JSONrepTweetsInAccount(id){
-    var tweets = [];
-    for(var i = 0; i < store.select('accounts').length; i++) {
-        tweets = store.select('tweets').filter(function (tweet) {
-            return tweet.account.id == id;
-        });
-    }
-    var newTweets = [];
-    for (var j = 0; j < tweets.length; j++){
-        newTweets.push(JSONrepSingleElem('tweets', tweets[j].id));
-    }
-    return newTweets;
+function tweetCollectionJSON(tweets) {
+    return tweets.map(tweetJSON);
 }
 
+function accountCollectionJSON(accounts) {
+    return accounts.map(accountJSON);
+}
 
 app.get('/tweets', function(req,res,next) {
-    res.json(JSONrepCollection('tweets'));
+    var tweets = store.select('tweets');
+    res.json(tweetCollectionJSON(tweets));
 });
 
 app.post('/tweets', function(req,res,next) {
     var tweet = req.body;
     tweet.account = store.select('accounts', tweet.account);
     var id = store.insert('tweets', tweet); // TODO check that the element is really a tweet!
+    var storedTweet = store.select('tweets', id);
     // set code 201 "created" and send the item back
-    res.status(201).json(JSONrepSingleElem('tweets', id));
+    res.status(201).json(tweetJSON(storedTweet));
 });
 
 
 app.get('/tweets/:id', function(req,res,next) {
-    res.json(JSONrepSingleElem('tweets', req.params.id));
+    var tweet = store.select('tweets', req.params.id);
+    res.json(tweetJSON(tweet));
 });
 
 app.delete('/tweets/:id', function(req,res,next) {
-    store.remove(req.params.id);
+    store.remove('tweets', req.params.id);
     res.status(200).end();
 });
 
@@ -138,18 +119,21 @@ app.put('/tweets/:id', function(req,res,next) {
 });
 
 app.get('/accounts', function(req,res,next) {
-    res.json(JSONrepCollection('accounts'));
+    var accounts = store.select('accounts');
+    res.json(accountCollectionJSON(accounts));
 });
 
 app.post('/accounts', function(req,res,next) {
     var id = store.insert('accounts', req.body); // TODO check that the element is really a tweet!
     // set code 201 "created" and send the item back
-    res.status(201).json(JSONrepSingleElem('accounts', id));
+    var account = store.select('accounts', id);
+    res.status(201).json(accountJSON(account));
 });
 
 
 app.get('/accounts/:id', function(req,res,next) {
-    res.json(JSONrepSingleElem('accounts', req.params.id));
+    var account = store.select('accounts', req.params.id);
+    res.json(accountJSON(account));
 });
 
 app.delete('/accounts/:id', function(req,res,next) {
@@ -158,7 +142,13 @@ app.delete('/accounts/:id', function(req,res,next) {
 });
 
 app.get('/accounts/:id/tweets', function(req,res,next) {
-    res.json(JSONrepTweetsInAccount(req.params.id));
+    var account = store.select('accounts', req.params.id);
+    res.json(tweetCollectionJSON(account.tweets));
+});
+
+app.put('/accounts/:id', function(req,res,next) {
+    store.replace('accounts', req.params.id, req.body);
+    res.status(200).end();
 });
 
 // TODOs

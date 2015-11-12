@@ -73,11 +73,15 @@ var users = [
         lastname: "Doe"
     }
 ];
-for(var i = 0; i < accounts.length; i++) {
-    accounts[i].tweets = tweets.filter(function (tweet) {
-        return tweet.account.id == accounts[i].id;
+
+accounts.forEach(function(account) {
+    account.tweets = tweets.filter(function (tweet) {
+        return tweet.account.id == account.id;
     });
-}
+});
+
+
+
 // our "in memory database" is a simple object!
 var memory = {};
 memory.tweets = tweets;
