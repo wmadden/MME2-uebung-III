@@ -113,6 +113,19 @@ function accountCollectionJSON(accounts) {
     return accounts.map(accountJSON);
 }
 
+/** Takes account attributes and an account id and updates the account with the given attributes.
+ * This Method is idempotent. If you give it the same input twice or more often, the result will be the same.
+ *
+ * @param {object} accountAttributes
+ * @param {number} id
+ * @returns {object} Updated account object
+ */
+function accountPatch(accountAttributes, id){
+    var account = store.select('accounts', id);
+    return Object.assign(account, accountAttributes);
+}
+
+
 app.get('/tweets', function(req,res,next) {
     var tweets = store.select('tweets');
     res.json(tweetCollectionJSON(tweets));
@@ -178,6 +191,12 @@ app.get('/accounts/:id/tweets', function(req,res,next) {
 app.put('/accounts/:id', function(req,res,next) {
     store.replace('accounts', req.params.id, req.body);
     res.status(200).end();
+});
+
+app.patch('/accounts/:id', function(req,res,next) {
+    var updatedAccount = accountPatch(req.body, req.params.id);
+    store.replace('accounts', req.params.id, updatedAccount);
+    res.status(200).json(accountJSON(updatedAccount));
 });
 
 // TODOs
