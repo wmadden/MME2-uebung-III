@@ -4,7 +4,7 @@
  * On each restart the db will be reset (it is only in memory).
  * Best start with GET http://localhost:3000/tweets to see the JSON for it
  *
- * @author Johannes Konert
+ * @author Johannes Konert, Sophie Wirth, Lena Meßmer
  * @licence CC BY-SA 4.0
  *
  */
@@ -64,6 +64,16 @@ app.use(function(req, res, next) {
 
 // Routes ***************************************
 
+/** Because of the n:1 relationship between tweets and accounts a normal GET/PUT Request would fail,
+ * due to endless recursion when looking up the objects. So the JSON rep methods replace the actual account
+ * object in the tweet to just an id, etc.
+* */
+
+/** Takes a tweet and gives back it's JSON representation.
+ *
+ * @param {object} tweet
+ * @returns {object} JSONrep of tweet
+ */
 function tweetJSON(tweet) {
     return Object.assign({}, tweet, {
         href: "http://localhost:3000/tweets/" + tweet.id,
@@ -72,6 +82,11 @@ function tweetJSON(tweet) {
     });
 }
 
+/** Takes an account and gives back it's JSON representation.
+ *
+ * @param {object} account
+ * @returns {object} JSONrep of account
+ */
 function accountJSON(account) {
     return Object.assign({}, account, {
         tweetshref: "http://localhost:3000/accounts/" + account.id + "/tweets",
@@ -80,10 +95,20 @@ function accountJSON(account) {
     });
 }
 
+/** Takes a tweet collection and gives back it's JSON representation.
+ *
+ * @param {Array} tweets
+ * @returns {Array} JSONrep of tweets
+ */
 function tweetCollectionJSON(tweets) {
     return tweets.map(tweetJSON);
 }
 
+/** Takes an account collection and gives back it's JSON representation.
+ *
+ * @param {Array} accounts
+ * @returns {Array} JSONrep of accounts
+ */
 function accountCollectionJSON(accounts) {
     return accounts.map(accountJSON);
 }
@@ -95,6 +120,10 @@ app.get('/tweets', function(req,res,next) {
 
 app.post('/tweets', function(req,res,next) {
     var tweet = req.body;
+    /**
+     * JSON rep of tweet just has an id for account, to prevent endless recursion,
+     * so the tweet that is created in store has to be given the actual account object
+     */
     tweet.account = store.select('accounts', tweet.account);
     var id = store.insert('tweets', tweet); // TODO check that the element is really a tweet!
     var storedTweet = store.select('tweets', id);
