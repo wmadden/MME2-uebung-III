@@ -23,70 +23,69 @@ var globalCounter = (function() {
 
 })();
 
-// some default store content
-var accounts = [
-    {   id: globalCounter(),
-        age: "12.12.2012",
-        tweets: null
-    },
-    {   id: globalCounter(),
-        age: "15.4.2015",
-        tweets: null
-    }
-];
-var tweets = [
-    {   id: globalCounter(),
-        account: accounts.find(function(account){
-            return account.id == 101;
-        }),
-        message: "Hello world tweet",
-        creator: {
-            href: "http://localhost:3000/users/106"
-        }
-    },
-    {   id: globalCounter(),
-        account: accounts.find(function(account){
-            return account.id == 101;
-        }),
-        message: "NOODLES",
-        creator: {
-            href: "http://localhost:3000/users/106"
-        }
-    },
-    {   id: globalCounter(),
-        account: accounts.find(function(account){
-            return account.id == 102;
-        }),
-        message: "Another nice tweet",
-        creator: {
-            href: "http://localhost:3000/users/107"
-        }
-    }
-];
-var users = [
-    {   id: globalCounter(),
-        firstname: "Super",
-        lastname: "Woman"
-    },
-    {   id: globalCounter(),
-        firstname: "Jane",
-        lastname: "Doe"
-    }
-];
+// Functions for creating objects
 
-accounts.forEach(function(account) {
-    account.tweets = tweets.filter(function (tweet) {
-        return tweet.account.id == account.id;
-    });
-});
+function createAccount(age) {
+    var account = {
+        id: globalCounter(),
+        age: age,
+        tweets: [],
+    };
 
+    memory.accounts.push(account);
 
+    return account;
+}
+
+function createTweet(accountId, message, creatorId) {
+    var account = store.select('accounts', accountId);
+    var creator = store.select('users', creatorId);
+
+    var tweet = {
+        id: globalCounter(),
+        message,
+        creator,
+        account,
+    };
+
+    memory.tweets.push(tweet);
+    account.tweets.push(tweet);
+
+    return tweet;
+}
+
+function createUser(firstname, lastname) {
+    var user = {
+        id: globalCounter(),
+        firstname,
+        lastname,
+    };
+
+    memory.users.push(user);
+
+    return user;
+}
+
+// Function to generate test data
+
+function createDummyData() {
+    var firstAccount = createAccount("12.12.2012");
+    var secondAccount = createAccount("15.4.2015");
+    var superWoman = createUser("Super", "Woman");
+    var janeDoe= createUser("Jane", "Doe");
+
+    createTweet(firstAccount.id, superWoman.id, "Hello world tweet");
+    createTweet(firstAccount.id, superWoman.id, "NOODLES");
+    createTweet(secondAccount.id, janeDoe.id, "Another nice tweet");
+}
 
 // our "in memory database" is a simple object!
-var memory = {};
-memory.tweets = tweets;
-memory.users = users;
-memory.accounts = accounts;
+
+var memory = {
+  tweets: [],
+  users: [],
+  accounts: [],
+};
 
 // private helper functions
 var checkElement = function(element) {
@@ -189,3 +188,7 @@ var store = {
     }
 };
 module.exports = store; // let require use the store object
+
+// Seed our "in memory database" with test data!
+
+createDummyData();
